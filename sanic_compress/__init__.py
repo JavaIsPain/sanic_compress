@@ -1,16 +1,29 @@
 from gzip import compress
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+
+
 DEFAULT_MIME_TYPES = frozenset(['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript'])
 
 
 class Compress(object):
     def __init__(self, app=None):
         self.app = app
+        self.executors: ThreadPoolExecutor = ThreadPoolExecutor()
+
         if app is not None:
             self.init_app(app)
+        self.gzip_func = partial(compress, compresslevel=self.app.config['COMPRESS_LEVEL'])
 
     def init_app(self, app):
-        defaults = [('COMPRESS_MIMETYPES', DEFAULT_MIME_TYPES), ('COMPRESS_LEVEL', 6), ('COMPRESS_MIN_SIZE', 500)]
+        defaults = [
+            ('CNT_COMPRESS_THREADS', None),
+            ('COMPRESS_MIMETYPES', DEFAULT_MIME_TYPES),
+            ('COMPRESS_LEVEL', 6),
+            ('COMPRESS_MIN_SIZE', 500)
+        ]
 
         for k, v in defaults:
             app.config.setdefault(k, v)
@@ -34,7 +47,9 @@ class Compress(object):
                 ('Content-Encoding' in response.headers)):
             return response
 
-        response.body = compress(response.body, compresslevel=self.app.config['COMPRESS_LEVEL'])
+        # response.body = compress(response.body, compresslevel=self.app.config['COMPRESS_LEVEL'])
+
+        await self.compress_body(response)
 
         response.headers['Content-Encoding'] = 'gzip'
         response.headers['Content-Length'] = len(response.body)
@@ -43,3 +58,6 @@ class Compress(object):
         response.headers["Vary"] = bool(vary and 'accept-encoding' not in vary.lower())*f"{vary}, " + "Accept-Encoding"
 
         return response
+
+    async def compress_body(self, response):
+        response.body = await asyncio.get_event_loop().run_in_executor(self.executors, self.gzip_func, response.body)
