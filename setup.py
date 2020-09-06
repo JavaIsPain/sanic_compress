@@ -2,9 +2,8 @@ from setuptools import setup
 
 try:
     import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
-    long_description = long_description.replace("\r", "")
-except:
+    long_description = pypandoc.convert('README.md', 'rst').replace("\r", "")
+except ImportError:
     long_description = ''
 
 setup(
@@ -16,9 +15,9 @@ setup(
     author='Suby Raman',
     license='MIT',
     packages=['sanic_compress'],
-    install_requires=('sanic'),
+    install_requires='sanic',
     zip_safe=False,
-    keywords=['sanic', 'gzip'],
+    keywords=['sanic', 'gzip', "compression"],
     classifiers=[
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

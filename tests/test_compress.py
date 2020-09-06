@@ -3,9 +3,7 @@ from sanic import Sanic
 from sanic.response import html, json, HTTPResponse
 from sanic_compress import Compress
 
-OTHER_COMPRESSIBLE_TYPES = set([
-    'text/css',
-    'application/javascript'])
+OTHER_COMPRESSIBLE_TYPES = {'text/css', 'application/javascript'}
 
 BUNCH_OF_TYPES = OTHER_COMPRESSIBLE_TYPES.union([
     'image/png', 'application/pdf', 'image/jpeg',
@@ -34,23 +32,23 @@ def compressed_app():
 
     @app.route('/html/<length>')
     def h(request, length):
-        res = "".join(['h' for i in range(int(length))])
+        res = "".join(['h' for _ in range(int(length))])
         return html(res)
 
     @app.route('/html/status/<status>')
     def h_with_status(request, status):
-        res = "".join(['h' for i in range(501)])
+        res = "".join(['h' for _ in range(501)])
         return html(res, status=int(status))
 
     @app.route('/html/vary/<vary>')
     def h_with_vary(request, vary):
-        res = "".join(['h' for i in range(501)])
+        res = "".join(['h' for _ in range(501)])
         return html(res, headers={'Vary': vary})
 
     @app.route('/other/<length>')
     def other(request, length):
         content_type = request.args.get('content_type')
-        body = "".join(['h' for i in range(int(length))])
+        body = "".join(['h' for _ in range(int(length))])
         return HTTPResponse(
             body, content_type=content_type)
 
